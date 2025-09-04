@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Emergency Ride-Hailing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-users"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-car"></i> Drivers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-exclamation-triangle"></i> Emergency Requests
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-chart-bar"></i> Analytics
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Admin Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-outline-secondary">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">{{ total_users }}</h4>
+                                    <p class="card-text">Total Users</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">{{ total_drivers }}</h4>
+                                    <p class="card-text">Total Drivers</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-car fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">{{ total_rides }}</h4>
+                                    <p class="card-text">Total Rides</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-route fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">{{ active_emergencies }}</h4>
+                                    <p class="card-text">Active Emergencies</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Emergency Requests -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Emergency Requests</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_emergencies %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>User</th>
+                                            <th>Emergency Type</th>
+                                            <th>Pickup Location</th>
+                                            <th>Destination</th>
+                                            <th>Status</th>
+                                            <th>Driver</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for emergency in recent_emergencies %}
+                                        <tr>
+                                            <td>{{ emergency.created_at.strftime('%Y-%m-%d %H:%M') if emergency.created_at else 'N/A' }}</td>
+                                            <td>
+                                                {{ user_map[emergency.user_id|string] if emergency.user_id and (emergency.user_id|string) in user_map else 'Unknown User' }}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'danger' if emergency.emergency_type == 'medical' else 'warning' }}">
+                                                    {{ emergency.emergency_type.title() }}
+                                                </span>
+                                            </td>
+                                            <td>{{ emergency.pickup_location.address if emergency.pickup_location else 'N/A' }}</td>
+                                            <td>{{ emergency.destination.address if emergency.destination else 'N/A' }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if emergency.status == 'completed' else 'warning' if emergency.status == 'in_progress' else 'danger' if emergency.status == 'pending' else 'secondary' }}">
+                                                    {{ emergency.status.title() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if emergency.assigned_driver %}
+                                                    {{ driver_map[emergency.assigned_driver|string] if (emergency.assigned_driver|string) in driver_map else 'Unknown Driver' }}
+                                                {% else %}
+                                                    Not assigned
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" onclick="viewDetails('{{ emergency._id }}')">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    {% if emergency.status == 'pending' %}
+                                                    <button class="btn btn-outline-success" onclick="assignDriver('{{ emergency._id }}')">
+                                                        <i class="fas fa-user-plus"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No emergency requests</h5>
+                                <p class="text-muted">Emergency requests will appear here</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Activity Feed -->
+            <div class="row mt-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="fas fa-broadcast-tower"></i> Real-time Activity Feed</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="activityFeed" style="max-height: 400px; overflow-y: auto;">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-clock fa-2x mb-2"></i>
+                                    <p>Waiting for activity...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">System Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Server Status</span>
+                                <span class="badge bg-success" id="serverStatus">Online</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Database Connection</span>
+                                <span class="badge bg-success" id="dbStatus">Connected</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Real-time Services</span>
+                                <span class="badge bg-success" id="realtimeStatus">Active</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Connected Users</span>
+                                <span class="badge bg-primary" id="connectedUsers">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Active Drivers</span>
+                                <span class="badge bg-info" id="activeDrivers">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <button class="btn btn-primary w-100" onclick="refreshData()">
+                                        <i class="fas fa-sync-alt"></i> Refresh Data
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-warning w-100" onclick="viewReports()">
+                                        <i class="fas fa-chart-bar"></i> View Reports
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-info w-100" onclick="manageUsers()">
+                                        <i class="fas fa-users"></i> Manage Users
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-success w-100" onclick="manageDrivers()">
+                                        <i class="fas fa-car"></i> Manage Drivers
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Emergency Details Modal -->
+<div class="modal fade" id="emergencyDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Emergency Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="emergencyDetailsContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.sidebar {
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+.sidebar .nav-link {
+    color: #333;
+    padding: 0.75rem 1rem;
+}
+
+.sidebar .nav-link:hover {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+main {
+    margin-top: 56px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Socket.IO connection for real-time updates
+const socket = io();
+
+// Activity feed management
+let activityCount = 0;
+const maxActivities = 50;
+
+function addActivityToFeed(activity) {
+    const activityFeed = document.getElementById('activityFeed');
+    
+    // Remove "waiting for activity" message if it exists
+    const waitingMessage = activityFeed.querySelector('.text-center.text-muted');
+    if (waitingMessage) {
+        waitingMessage.remove();
+    }
+    
+    const activityElement = document.createElement('div');
+    activityElement.className = 'activity-item border-bottom py-3 fade-in';
+    activityElement.innerHTML = `
+        <div class="d-flex align-items-start">
+            <div class="activity-icon me-3">
+                <i class="fas fa-${activity.icon} text-${activity.color}"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">${activity.title}</h6>
+                        <p class="mb-1 text-muted">${activity.description}</p>
+                        <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                    </div>
+                    <span class="badge bg-${activity.badgeColor}">${activity.badge}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add to top of feed
+    activityFeed.insertBefore(activityElement, activityFeed.firstChild);
+    
+    // Limit number of activities
+    activityCount++;
+    if (activityCount > maxActivities) {
+        const lastActivity = activityFeed.lastElementChild;
+        if (lastActivity) {
+            activityFeed.removeChild(lastActivity);
+        }
+    }
+    
+    // Scroll to top
+    activityFeed.scrollTop = 0;
+}
+
+// Socket event handlers
+socket.on('connect', function() {
+    console.log('Admin connected to server');
+    addActivityToFeed({
+        icon: 'wifi',
+        color: 'success',
+        title: 'System Connected',
+        description: 'Real-time monitoring is now active',
+        badge: 'Online',
+        badgeColor: 'success'
+    });
+});
+
+socket.on('user_connected', function(data) {
+    addActivityToFeed({
+        icon: data.user_type === 'driver' ? 'car' : 'user',
+        color: 'primary',
+        title: `${data.user_name} Connected`,
+        description: `${data.user_type.charAt(0).toUpperCase() + data.user_type.slice(1)} logged in`,
+        badge: 'Connected',
+        badgeColor: 'success'
+    });
+    
+    // Update connected users count
+    updateConnectedUsers();
+});
+
+socket.on('user_disconnected', function(data) {
+    addActivityToFeed({
+        icon: data.user_type === 'driver' ? 'car' : 'user',
+        color: 'secondary',
+        title: `${data.user_name} Disconnected`,
+        description: `${data.user_type.charAt(0).toUpperCase() + data.user_type.slice(1)} logged out`,
+        badge: 'Offline',
+        badgeColor: 'secondary'
+    });
+    
+    // Update connected users count
+    updateConnectedUsers();
+});
+
+socket.on('new_emergency_request', function(data) {
+    addActivityToFeed({
+        icon: 'exclamation-triangle',
+        color: 'danger',
+        title: 'New Emergency Request',
+        description: `${data.user_name} requested ${data.emergency_type} emergency ride`,
+        badge: data.priority.toUpperCase(),
+        badgeColor: data.priority === 'high' ? 'danger' : 'warning'
+    });
+});
+
+socket.on('request_accepted_admin', function(data) {
+    addActivityToFeed({
+        icon: 'check-circle',
+        color: 'success',
+        title: 'Request Accepted',
+        description: `${data.driver_name} accepted ${data.user_name}'s emergency request`,
+        badge: 'Accepted',
+        badgeColor: 'success'
+    });
+});
+
+socket.on('request_rejected_admin', function(data) {
+    addActivityToFeed({
+        icon: 'times-circle',
+        color: 'warning',
+        title: 'Request Rejected',
+        description: `${data.driver_name} rejected ${data.user_name}'s request: ${data.reason}`,
+        badge: 'Rejected',
+        badgeColor: 'warning'
+    });
+});
+
+socket.on('no_drivers_available_admin', function(data) {
+    addActivityToFeed({
+        icon: 'exclamation-circle',
+        color: 'danger',
+        title: 'No Drivers Available',
+        description: `${data.user_name}'s ${data.emergency_type} request - no drivers available`,
+        badge: 'Critical',
+        badgeColor: 'danger'
+    });
+});
+
+function updateConnectedUsers() {
+    // This would typically fetch from server, for now we'll simulate
+    const connectedUsers = Math.floor(Math.random() * 20) + 5;
+    const activeDrivers = Math.floor(Math.random() * 10) + 2;
+    
+    document.getElementById('connectedUsers').textContent = connectedUsers;
+    document.getElementById('activeDrivers').textContent = activeDrivers;
+}
+
+// Admin functions
+function viewDetails(emergencyId) {
+    // This would typically fetch emergency details via AJAX
+    document.getElementById('emergencyDetailsContent').innerHTML = `
+        <div class="alert alert-info">
+            <h6>Emergency Request Details</h6>
+            <p>Request ID: ${emergencyId}</p>
+            <p>This would show detailed information about the emergency request.</p>
+        </div>
+    `;
+    $('#emergencyDetailsModal').modal('show');
+}
+
+function assignDriver(emergencyId) {
+    if (confirm('Are you sure you want to manually assign a driver to this emergency request?')) {
+        // This would typically make an AJAX call to assign a driver
+        alert('Driver assignment functionality would be implemented here.');
+    }
+}
+
+function refreshData() {
+    location.reload();
+}
+
+function viewReports() {
+    alert('Reports functionality would be implemented here.');
+}
+
+function manageUsers() {
+    alert('User management functionality would be implemented here.');
+}
+
+function manageDrivers() {
+    alert('Driver management functionality would be implemented here.');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateConnectedUsers();
+    
+    // Update stats every 30 seconds
+    setInterval(updateConnectedUsers, 30000);
+});
+</script>
+{% endblock %}

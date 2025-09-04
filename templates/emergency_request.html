@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Request - Emergency Ride-Hailing{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Emergency Ride Request</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="emergencyForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="emergency_type" class="form-label">Emergency Type</label>
+                                    <select class="form-select" id="emergency_type" name="emergency_type" required>
+                                        <option value="">Select emergency type</option>
+                                        <option value="medical">Medical Emergency</option>
+                                        <option value="home">Home Emergency</option>
+                                        <option value="accident">Accident</option>
+                                        <option value="other">Other Emergency</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Priority Level</label>
+                                    <select class="form-select" id="priority" name="priority">
+                                        <option value="high">High</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Brief description of the emergency..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="pickup_address" class="form-label">Pickup Location</label>
+                                    <input type="text" class="form-control" id="pickup_address" name="pickup_address" placeholder="Enter pickup address in Kenya" required>
+                                    <input type="hidden" id="pickup_lat" name="pickup_lat">
+                                    <input type="hidden" id="pickup_lng" name="pickup_lng">
+                                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="useCurrentLocation">
+                                        <i class="fas fa-map-marker-alt"></i> Use Current Location
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dest_address" class="form-label">Destination</label>
+                                    <input type="text" class="form-control" id="dest_address" name="dest_address" placeholder="Enter destination in Kenya" required>
+                                    <input type="hidden" id="dest_lat" name="dest_lat">
+                                    <input type="hidden" id="dest_lng" name="dest_lng">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Map -->
+                        <div class="mb-3">
+                            <label class="form-label">Location Map</label>
+                            <div id="map" style="height: 300px; width: 100%; border: 1px solid #ddd; border-radius: 5px;"></div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-exclamation-triangle"></i> Request Emergency Ride
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Status Modal -->
+<div class="modal fade" id="requestStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Request Status</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="statusMessage"></div>
+                <div class="text-center mt-3">
+                    <div class="spinner-border text-primary" role="status" id="loadingSpinner">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+#map {
+    border-radius: 8px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let map;
+let pickupMarker;
+let destMarker;
+
+function initLeaflet() {
+    // Center on Nairobi, Kenya by default
+    map = L.map('map').setView([-1.286389, 36.817223], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+}
+
+async function geocode(address) {
+    // Restrict search within Kenya using viewbox and countrycodes
+    const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&bounded=1&countrycodes=ke&viewbox=33.5,5.5,42.5,-5.5&q=${encodeURIComponent(address)}`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const data = await res.json();
+    return data.length ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), display_name: data[0].display_name } : null;
+}
+
+async function reverseGeocode(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const data = await res.json();
+    return data && data.display_name ? data.display_name : `Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}`;
+}
+
+// Initialize map when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initLeaflet();
+});
+
+// Use current location
+document.getElementById('useCurrentLocation').addEventListener('click', async function() {
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by this browser.');
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(async function(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        if (pickupMarker) pickupMarker.remove();
+        pickupMarker = L.marker([lat, lng]).addTo(map).bindPopup('Pickup Location');
+        map.setView([lat, lng], 15);
+        
+        document.getElementById('pickup_lat').value = lat;
+        document.getElementById('pickup_lng').value = lng;
+        const addr = await reverseGeocode(lat, lng);
+        document.getElementById('pickup_address').value = addr;
+    });
+});
+
+// Geocode on address input blur
+document.getElementById('pickup_address').addEventListener('blur', async function() {
+    const addr = this.value.trim();
+    if (!addr) return;
+    const result = await geocode(addr);
+    if (result) {
+        document.getElementById('pickup_lat').value = result.lat;
+        document.getElementById('pickup_lng').value = result.lng;
+        if (pickupMarker) pickupMarker.remove();
+        pickupMarker = L.marker([result.lat, result.lng]).addTo(map).bindPopup('Pickup Location');
+        map.setView([result.lat, result.lng], 15);
+    }
+});
+
+document.getElementById('dest_address').addEventListener('blur', async function() {
+    const addr = this.value.trim();
+    if (!addr) return;
+    const result = await geocode(addr);
+    if (result) {
+        document.getElementById('dest_lat').value = result.lat;
+        document.getElementById('dest_lng').value = result.lng;
+        if (destMarker) destMarker.remove();
+        destMarker = L.marker([result.lat, result.lng], { icon: L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+        })}).addTo(map).bindPopup('Destination');
+    }
+});
+
+// Form submission
+document.getElementById('emergencyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        pickup_lat: parseFloat(document.getElementById('pickup_lat').value),
+        pickup_lng: parseFloat(document.getElementById('pickup_lng').value),
+        pickup_address: document.getElementById('pickup_address').value,
+        dest_lat: parseFloat(document.getElementById('dest_lat').value),
+        dest_lng: parseFloat(document.getElementById('dest_lng').value),
+        dest_address: document.getElementById('dest_address').value,
+        emergency_type: document.getElementById('emergency_type').value,
+        description: document.getElementById('description').value,
+        priority: document.getElementById('priority').value
+    };
+    
+    if (!formData.pickup_lat || !formData.pickup_lng || !formData.dest_lat || !formData.dest_lng) {
+        alert('Please set both pickup and destination locations.');
+        return;
+    }
+
+    document.getElementById('statusMessage').innerHTML = `
+        <div class="alert alert-info">
+            <h6>Processing your emergency request...</h6>
+            <p>We are finding the nearest available driver for you.</p>
+        </div>
+    `;
+    const modal = new bootstrap.Modal(document.getElementById('requestStatusModal'));
+    modal.show();
+
+    fetch('/emergency/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('statusMessage').innerHTML = `
+                <div class="alert alert-success">
+                    <h6>Request Submitted Successfully!</h6>
+                    <p>Your emergency ride request has been submitted. We are searching for the nearest available driver.</p>
+                    <p><strong>Request ID:</strong> ${data.request_id}</p>
+                </div>
+            `;
+        } else {
+            document.getElementById('statusMessage').innerHTML = `
+                <div class="alert alert-danger">
+                    <h6>Request Failed</h6>
+                    <p>There was an error processing your request. Please try again.</p>
+                </div>
+            `;
+        }
+        document.getElementById('loadingSpinner').style.display = 'none';
+    })
+    .catch(() => {
+        document.getElementById('statusMessage').innerHTML = `
+            <div class="alert alert-danger">
+                <h6>Request Failed</h6>
+                <p>There was an error processing your request. Please try again.</p>
+            </div>
+        `;
+        document.getElementById('loadingSpinner').style.display = 'none';
+    });
+});
+</script>
+{% endblock %}

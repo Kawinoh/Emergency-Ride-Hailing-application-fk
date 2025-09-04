@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Ride-Hailing - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Emergency Ride-Hailing Service</h1>
+                <p class="lead mb-4">Get immediate transportation assistance during emergencies. Connect with the nearest available drivers in real-time for swift response.</p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Get Started</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">Login</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <img src="{{ url_for('static', filename='images/hero-ride.png') }}" alt="Emergency Ride" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold">Why Choose EmergencyRide?</h2>
+                <p class="lead">Designed specifically for emergency situations</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h5>Instant Response</h5>
+                    <p>Get connected with the nearest available driver within seconds of your emergency request.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card fade-in" style="animation-delay: 0.2s;">
+                    <div class="feature-icon" style="background: var(--gradient-success);">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h5>Real-time Tracking</h5>
+                    <p>Track your driver's location in real-time and get accurate arrival estimates.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card fade-in" style="animation-delay: 0.4s;">
+                    <div class="feature-icon" style="background: var(--gradient-warning);">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5>Verified Drivers</h5>
+                    <p>All drivers are verified and background-checked to ensure your safety and security.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold">How It Works</h2>
+                <p class="lead">Simple steps to get emergency transportation</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <span class="fw-bold">1</span>
+                    </div>
+                    <h5>Register</h5>
+                    <p>Create your account as a user or driver</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <span class="fw-bold">2</span>
+                    </div>
+                    <h5>Request</h5>
+                    <p>Submit an emergency ride request with your location</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <span class="fw-bold">3</span>
+                    </div>
+                    <h5>Match</h5>
+                    <p>Get matched with the nearest available driver</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="step-number bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <span class="fw-bold">4</span>
+                    </div>
+                    <h5>Ride</h5>
+                    <p>Track your driver and reach your destination safely</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Emergency Types Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold">Emergency Types We Handle</h2>
+                <p class="lead">Various emergency situations covered</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-heartbeat fa-3x text-danger mb-3"></i>
+                        <h5>Medical Emergency</h5>
+                        <p>Urgent medical transportation to hospitals or clinics</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-home fa-3x text-warning mb-3"></i>
+                        <h5>Home Emergency</h5>
+                        <p>Urgent transportation for home-related emergencies</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-car-crash fa-3x text-danger mb-3"></i>
+                        <h5>Accident</h5>
+                        <p>Immediate transportation after accidents or incidents</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h5>Other Emergency</h5>
+                        <p>Any other urgent transportation needs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container text-center">
+        <h2 class="display-5 fw-bold mb-4">Ready to Get Started?</h2>
+        <p class="lead mb-4">Join thousands of users who trust EmergencyRide for their emergency transportation needs</p>
+        <div class="d-flex gap-3 justify-content-center">
+            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Register Now</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">Login</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

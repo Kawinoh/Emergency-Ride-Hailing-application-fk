@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Emergency Ride-Hailing{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 mt-5">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" height="50" class="mb-3">
+                        <h3 class="fw-bold">Create Account</h3>
+                        <p class="text-muted">Join EmergencyRide today</p>
+                    </div>
+
+                    <form method="POST" id="registerForm">
+                        <div class="mb-3">
+                            <label for="user_type" class="form-label">Account Type</label>
+                            <select class="form-select" id="user_type" name="user_type" required onchange="toggleDriverFields()">
+                                <option value="">Select account type</option>
+                                <option value="user">User</option>
+                                <option value="driver">Driver</option>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+
+                        <!-- Driver-specific fields -->
+                        <div id="driverFields" style="display: none;">
+                            <hr class="my-4">
+                            <h5 class="mb-3">Driver Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="license_number" class="form-label">Driver's License Number</label>
+                                <input type="text" class="form-control" id="license_number" name="license_number">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="vehicle_make" class="form-label">Vehicle Make</label>
+                                        <input type="text" class="form-control" id="vehicle_make" name="vehicle_make">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="vehicle_model" class="form-label">Vehicle Model</label>
+                                        <input type="text" class="form-control" id="vehicle_model" name="vehicle_model">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="vehicle_year" class="form-label">Vehicle Year</label>
+                                        <input type="number" class="form-control" id="vehicle_year" name="vehicle_year" min="1990" max="2024">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="vehicle_color" class="form-label">Vehicle Color</label>
+                                        <input type="text" class="form-control" id="vehicle_color" name="vehicle_color">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="plate_number" class="form-label">License Plate Number</label>
+                                <input type="text" class="form-control" id="plate_number" name="plate_number">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 btn-lg mb-3">Create Account</button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}" class="text-decoration-none">Sign in here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDriverFields() {
+    const userType = document.getElementById('user_type').value;
+    const driverFields = document.getElementById('driverFields');
+    
+    if (userType === 'driver') {
+        driverFields.style.display = 'block';
+        // Make driver fields required
+        const driverInputs = driverFields.querySelectorAll('input');
+        driverInputs.forEach(input => {
+            input.required = true;
+        });
+    } else {
+        driverFields.style.display = 'none';
+        // Remove required from driver fields
+        const driverInputs = driverFields.querySelectorAll('input');
+        driverInputs.forEach(input => {
+            input.required = false;
+        });
+    }
+}
+</script>
+{% endblock %}

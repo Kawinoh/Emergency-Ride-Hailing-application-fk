@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard - Emergency Ride-Hailing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('user_dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('emergency_request') }}">
+                            <i class="fas fa-exclamation-triangle"></i> Emergency Request
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-history"></i> Ride History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('emergency_request') }}" class="btn btn-danger btn-lg">
+                        <i class="fas fa-exclamation-triangle"></i> Emergency Request
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card bg-primary">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-number">{{ status_counts.total }}</div>
+                                <div class="stat-label">Total Requests</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-car fa-2x text-white opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-success">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-number">{{ status_counts.completed }}</div>
+                                <div class="stat-label">Completed</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-check-circle fa-2x text-white opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-warning">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-number">{{ status_counts.in_progress }}</div>
+                                <div class="stat-label">In Progress</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-clock fa-2x text-white opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="stat-number">{{ status_counts.pending }}</div>
+                                <div class="stat-label">Pending</div>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-hourglass-half fa-2x text-white opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Requests -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Your Emergency Requests</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if user_requests %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Pickup</th>
+                                            <th>Destination</th>
+                                            <th>Type</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for req in user_requests %}
+                                        <tr>
+                                            <td>{{ req.created_at.strftime('%Y-%m-%d %H:%M') if req.created_at else 'N/A' }}</td>
+                                            <td>{{ req.pickup_location.address if req.pickup_location else 'N/A' }}</td>
+                                            <td>{{ req.destination.address if req.destination else 'N/A' }}</td>
+                                            <td><span class="badge bg-{{ 'danger' if req.emergency_type == 'medical' else 'warning' }}">{{ req.emergency_type.title() }}</span></td>
+                                            <td><span class="badge bg-{{ 'success' if req.status == 'completed' else 'warning' if req.status in ['accepted','in_progress'] else 'secondary' }}">{{ req.status.replace('_',' ').title() }}</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center text-muted">No emergency requests yet.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Emergency Alert Modal -->
+<div class="modal fade" id="emergencyAlert" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Emergency Request Update</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="alertMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.sidebar {
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+.sidebar .nav-link {
+    color: #333;
+    padding: 0.75rem 1rem;
+}
+
+.sidebar .nav-link:hover {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+main {
+    margin-top: 56px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Socket.IO connection for real-time updates
+const socket = io();
+
+// Notification system
+function showNotification(message, type = 'info', duration = 5000) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+            <div>
+                <strong>${message.title || 'Notification'}</strong>
+                <p class="mb-0">${message.text}</p>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Show notification
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    // Hide notification
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, duration);
+}
+
+socket.on('connect', function() {
+    console.log('Connected to server');
+    showNotification({
+        title: 'Connected',
+        text: 'You are now connected to the emergency system'
+    }, 'success', 3000);
+});
+
+socket.on('request_accepted', function(data) {
+    showNotification({
+        title: 'Request Accepted!',
+        text: `Driver ${data.driver_name} has accepted your emergency request. Estimated arrival: ${data.estimated_arrival}`
+    }, 'success');
+    
+    // Update modal content
+    document.getElementById('alertMessage').innerHTML = `
+        <div class="alert alert-success">
+            <h6><i class="fas fa-check-circle"></i> Request Accepted!</h6>
+            <p><strong>Driver:</strong> ${data.driver_name}</p>
+            <p><strong>Phone:</strong> ${data.driver_phone}</p>
+            <p><strong>Vehicle:</strong> ${data.vehicle_info.make} ${data.vehicle_info.model} (${data.vehicle_info.color})</p>
+            <p><strong>Plate:</strong> ${data.vehicle_info.plate_number}</p>
+            <p><strong>Estimated Arrival:</strong> ${data.estimated_arrival}</p>
+        </div>
+    `;
+    $('#emergencyAlert').modal('show');
+});
+
+socket.on('request_rejected', function(data) {
+    showNotification({
+        title: 'Request Rejected',
+        text: data.message
+    }, 'warning');
+    
+    document.getElementById('alertMessage').innerHTML = `
+        <div class="alert alert-warning">
+            <h6><i class="fas fa-exclamation-triangle"></i> Request Rejected</h6>
+            <p><strong>Driver:</strong> ${data.driver_name}</p>
+            <p><strong>Reason:</strong> ${data.reason}</p>
+            <p>${data.message}</p>
+        </div>
+    `;
+    $('#emergencyAlert').modal('show');
+});
+
+socket.on('no_drivers_available', function(data) {
+    showNotification({
+        title: 'No Drivers Available',
+        text: data.message
+    }, 'warning');
+    
+    document.getElementById('alertMessage').innerHTML = `
+        <div class="alert alert-warning">
+            <h6><i class="fas fa-exclamation-triangle"></i> No Drivers Available</h6>
+            <p>${data.message}</p>
+            <p>We will notify you as soon as a driver becomes available.</p>
+        </div>
+    `;
+    $('#emergencyAlert').modal('show');
+});
+
+socket.on('ride_started', function(data) {
+    showNotification({
+        title: 'Ride Started!',
+        text: `Driver ${data.driver_name} has started your ride.`
+    }, 'info');
+    
+    document.getElementById('alertMessage').innerHTML = `
+        <div class="alert alert-info">
+            <h6><i class="fas fa-car"></i> Ride Started!</h6>
+            <p>Driver ${data.driver_name} has started your ride.</p>
+            <p>You can track the ride in real-time.</p>
+        </div>
+    `;
+    $('#emergencyAlert').modal('show');
+});
+
+socket.on('ride_completed', function(data) {
+    showNotification({
+        title: 'Ride Completed!',
+        text: 'Your emergency ride has been completed successfully.'
+    }, 'success');
+    
+    document.getElementById('alertMessage').innerHTML = `
+        <div class="alert alert-success">
+            <h6><i class="fas fa-check-circle"></i> Ride Completed!</h6>
+            <p>Your emergency ride has been completed successfully.</p>
+            <p>Thank you for using EmergencyRide!</p>
+        </div>
+    `;
+    $('#emergencyAlert').modal('show');
+    
+    // Refresh the page to update the dashboard
+    setTimeout(() => {
+        location.reload();
+    }, 3000);
+});
+
+socket.on('disconnect', function() {
+    showNotification({
+        title: 'Disconnected',
+        text: 'Connection lost. Attempting to reconnect...'
+    }, 'error');
+});
+</script>
+{% endblock %}
