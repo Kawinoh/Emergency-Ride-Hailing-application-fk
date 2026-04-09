@@ -3,37 +3,27 @@
 Database initialization script for Emergency Ride-Hailing Application
 """
 
-from pymongo import MongoClient
+from database_utils import DatabaseManager
 from werkzeug.security import generate_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
+from config import config
+
+# Load configuration
+config_name = os.environ.get('FLASK_ENV', 'development')
+app_config = config[config_name]
+
+# Initialize database manager
+db_manager = DatabaseManager(config_name)
 
 def init_database():
     """Initialize the database with sample data"""
     
-    # Connect to MongoDB
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client.emergency_ride_hailing
-    
-    # Collections
-    users = db.users
-    drivers = db.drivers
-    rides = db.rides
-    emergency_requests = db.emergency_requests
-    
     print("Initializing Emergency Ride-Hailing Database...")
     
-    # Create indexes
+    # Create optimized indexes
     print("Creating database indexes...")
-    users.create_index("email", unique=True)
-    drivers.create_index("email", unique=True)
-    drivers.create_index("license_number", unique=True)
-    emergency_requests.create_index("user_id")
-    emergency_requests.create_index("assigned_driver")
-    emergency_requests.create_index("status")
-    rides.create_index("user_id")
-    rides.create_index("driver_id")
-    rides.create_index("status")
+    db_manager.create_indexes()
     
     # Create sample admin user
     admin_user = {
@@ -45,8 +35,8 @@ def init_database():
         'created_at': datetime.utcnow()
     }
     
-    if not users.find_one({'email': 'admin@emergencyride.com'}):
-        users.insert_one(admin_user)
+    if not db_manager.users.find_one({'email': 'admin@emergencyride.com'}):
+        db_manager.users.insert_one(admin_user)
         print("✓ Created admin user (admin@emergencyride.com / admin123)")
     else:
         print("✓ Admin user already exists")
@@ -64,8 +54,8 @@ def init_database():
         ]
     }
     
-    if not users.find_one({'email': 'user@example.com'}):
-        users.insert_one(sample_user)
+    if not db_manager.users.find_one({'email': 'user@example.com'}):
+        db_manager.users.insert_one(sample_user)
         print("✓ Created sample user (user@example.com / user123)")
     else:
         print("✓ Sample user already exists")
@@ -94,8 +84,8 @@ def init_database():
         'created_at': datetime.utcnow()
     }
     
-    if not drivers.find_one({'email': 'driver@example.com'}):
-        drivers.insert_one(sample_driver)
+    if not db_manager.drivers.find_one({'email': 'driver@example.com'}):
+        db_manager.drivers.insert_one(sample_driver)
         print("✓ Created sample driver (driver@example.com / driver123)")
     else:
         print("✓ Sample driver already exists")
@@ -124,8 +114,8 @@ def init_database():
         'created_at': datetime.utcnow()
     }
     
-    if not drivers.find_one({'email': 'driver2@example.com'}):
-        drivers.insert_one(sample_driver2)
+    if not db_manager.drivers.find_one({'email': 'driver2@example.com'}):
+        db_manager.drivers.insert_one(sample_driver2)
         print("✓ Created sample driver 2 (driver2@example.com / driver123)")
     else:
         print("✓ Sample driver 2 already exists")

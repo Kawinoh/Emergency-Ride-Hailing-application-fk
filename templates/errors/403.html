@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied - Emergency Ride-Hailing{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-page">
+                <div class="error-icon mb-4">
+                    <i class="fas fa-lock fa-4x text-warning"></i>
+                </div>
+                <h1 class="display-1 fw-bold text-warning">403</h1>
+                <h2 class="mb-3">Access Denied</h2>
+                <p class="lead text-muted mb-4">
+                    You don't have permission to access this page. 
+                    Please login with the appropriate credentials.
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-2"></i>Go Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-page {
+    padding: 2rem;
+}
+.error-icon {
+    opacity: 0.5;
+}
+</style>
+{% endblock %}

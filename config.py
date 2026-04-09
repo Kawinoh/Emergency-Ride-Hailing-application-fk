@@ -7,9 +7,9 @@ from datetime import timedelta
 
 class Config:
     """Base configuration class"""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key-here-change-this-in-production'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     MONGODB_URI = os.environ.get('MONGODB_URI') or 'mongodb://localhost:27017/emergency_ride_hailing'
-    GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY') or 'your-google-maps-api-key-here'
+    GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY')
     
     # Session configuration
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
@@ -32,16 +32,26 @@ class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
     TESTING = False
+    
+    # Generate a secure development key if not set
+    if not os.environ.get('SECRET_KEY'):
+        import secrets
+        SECRET_KEY = secrets.token_hex(32)
 
 class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
     TESTING = False
     
-    # Override with production values
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    if not SECRET_KEY:
-        raise ValueError("SECRET_KEY environment variable must be set in production")
+    def __init__(self):
+        # Required production environment variables
+        self.SECRET_KEY = os.environ.get('SECRET_KEY')
+        self.MONGODB_URI = os.environ.get('MONGODB_URI')
+        
+        if not self.SECRET_KEY:
+            raise ValueError("SECRET_KEY environment variable must be set in production")
+        if not self.MONGODB_URI:
+            raise ValueError("MONGODB_URI environment variable must be set in production")
 
 class TestingConfig(Config):
     """Testing configuration"""

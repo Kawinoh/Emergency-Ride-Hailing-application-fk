@@ -1,34 +1,28 @@
 #!/usr/bin/env python3
 """
-Run script for Emergency Ride-Hailing Application
+Improved run script for Emergency Ride-Hailing Application
 """
 
 import os
 import sys
 
-def create_app():
-    """Create and configure the Flask application"""
-    # Import here to avoid circular imports
-    from app import app
-    from error_handlers import setup_logging, setup_error_handlers
-    from config_fixed import config
-    
-    # Load configuration
-    app.config.from_object(config)
-    
-    # Setup logging
-    setup_logging(app)
-    
-    # Setup error handlers
-    setup_error_handlers(app)
-    
-    return app
-
 def main():
     """Main function to run the application"""
     try:
-        # Create app with proper configuration
-        app = create_app()
+        # Import here to avoid circular imports
+        from app import app, socketio
+        from error_handlers import setup_logging, setup_error_handlers
+        from config import config
+        
+        # Load configuration
+        config_name = os.environ.get('FLASK_ENV', 'development')
+        app.config.from_object(config[config_name])
+        
+        # Setup logging
+        setup_logging(app)
+        
+        # Setup error handlers
+        setup_error_handlers(app)
         
         # Get port from environment or use default
         port = int(os.environ.get('PORT', 5000))
@@ -39,11 +33,11 @@ def main():
         # Get debug mode
         debug = app.config.get('DEBUG', False)
         
-        # Run the application
+        # Print startup information
         print("=" * 60)
         print("Emergency Ride-Hailing Application")
         print("=" * 60)
-        print(f"Environment: {os.environ.get('FLASK_ENV', 'development')}")
+        print(f"Environment: {config_name}")
         print(f"Host: {host}")
         print(f"Port: {port}")
         print(f"Debug Mode: {debug}")
@@ -52,9 +46,6 @@ def main():
         print("Starting server...")
         print("Press Ctrl+C to stop the server")
         print("=" * 60)
-        
-        # Import socketio here to avoid circular imports
-        from app import socketio
         
         # Run the application with Socket.IO
         socketio.run(

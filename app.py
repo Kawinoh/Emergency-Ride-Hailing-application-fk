@@ -8,14 +8,18 @@ import json
 import uuid
 from bson import ObjectId
 import math
+from config_fixed import config as app_config
 
+# Load configuration
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=True, engineio_logger=True)
+app.config.from_object(app_config)
 
-# MongoDB connection
-client = MongoClient('mongodb://localhost:27017/')
-db = client.emergency_ride_hailing
+# Initialize Socket.IO
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode=app.config['SOCKETIO_ASYNC_MODE'], logger=app.debug, engineio_logger=app.debug)
+
+# MongoDB connection with connection pooling
+client = MongoClient(app.config['MONGODB_URI'], maxPoolSize=50, connectTimeoutMS=30000)
+db = client.get_database()
 
 # Collections
 users = db.users
